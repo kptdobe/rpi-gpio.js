@@ -4,6 +4,10 @@ var EventEmitter = require('events').EventEmitter;
 var async        = require('async');
 var debug        = require('debug')('rpi-gpio');
 
+var PATH_GPIO = '/sys/class/gpio';
+var PATH_CPUINFO = '/proc/cpuinfo';
+var PATH_W1_DEVICES = '/sys/bus/w1/devices';
+
 var MOCK_PATH;
 var MOCK_CREATE_MISSING_FOLDER = false;
 
@@ -220,7 +224,7 @@ function Gpio() {
         }
 
         value = (!!value && value !== '0') ? '1' : '0';
-        fs.writeFile(getPath('/sys/class/gpio/gpio' + pin + '/value'), value, cb || function () {});
+        fs.writeFile(getPath(PATH_GPIO + '/gpio' + pin + '/value'), value, cb || function () {});
     };
 
     /**
@@ -238,7 +242,7 @@ function Gpio() {
             });
         }
 
-        fs.readFile(getPath('/sys/class/gpio/gpio' + pin + '/value'), 'utf-8', function(err, data) {
+        fs.readFile(getPath(PATH_GPIO + '/gpio' + pin + '/value'), 'utf-8', function(err, data) {
             data = (data + '').trim() || '0';
             return cb(err, data === '1');
         });
@@ -285,7 +289,7 @@ function Gpio() {
             return cb(null);
         }
 
-        fs.readFile(getPath('/proc/cpuinfo'), 'utf8', function(err, data) {
+        fs.readFile(getPath(PATH_CPUINFO), 'utf8', function(err, data) {
             if (err) return cb(err);
 
             // Match the last 4 digits of the number following "Revision:"
@@ -345,7 +349,7 @@ function Gpio() {
         debug('listen for pin %d', pin);
         var Gpio = this;
         fs.watchFile(
-            getPath('/sys/class/gpio/gpio' + pin + '/value'),
+            getPath(PATH_GPIO + '/gpio' + pin + '/value'),
             { persistent: true, interval: pollFrequency },
             function(current, previous) {
                 if (current.mtime > previous.mtime) {
@@ -365,48 +369,56 @@ util.inherits(Gpio, EventEmitter);
 
 function setDirection(pin, direction, cb) {
     debug('set direction %s on pin %d', direction.toUpperCase(), pin);
-    fs.writeFile(getPath('/sys/class/gpio/gpio' + pin + '/direction'), direction, function(err) {
+    fs.writeFile(getPath(PATH_GPIO + '/gpio' + pin + '/direction'), direction, function(err) {
         if (cb) return cb(err);
     });
 }
 
 function exportPin(pin, cb) {
     debug('export pin %d', pin);
-    fs.writeFile(getPath('/sys/class/gpio/export'), pin, function(err) {
+    fs.writeFile(getPath(PATH_GPIO + '/export'), pin, function(err) {
         if (cb) return cb(err);
     });
 }
 
 function unexportPin(pin, cb) {
     debug('unexport pin %d', pin);
-    fs.unwatchFile(getPath('/sys/class/gpio/gpio' + pin + '/value'));
+    fs.unwatchFile(getPath(PATH_GPIO + '/gpio' + pin + '/value'));
     fs.writeFile(getPath('/unexport'), pin, function(err) {
         if (cb) return cb(err);
     });
 }
 
 function isExported(pin, cb) {
-    fs.exists(getPath('/gpio' + pin), function(exists) {
+    fs.exists(getPath(PATH_GPIO + '/gpio' + pin), function(exists) {
         return cb(null, exists);
     });
 }
 
 function getPath(suffix) {
     if (MOCK_PATH) {
-        var p = MOCK_PATH + suffix;;
+        var path = MOCK_PATH + suffix;;
         if (MOCK_CREATE_MISSING_FOLDER) {
-            var folder = p.substring(0, p.lastIndexOf("/"));
-            if (!fs.existsSync(folder) ) {
-                fs.mkdirSync(folder);
+            var folderPath = "";
+            var folders = path.substring(0, path.lastIndexOf("/")).split("/");
+            for (var i=1;i<folders.length;i++) {
+                folderPath += "/" + folders[i];
+                if (!fs.existsSync(folderPath)) {
+                    fs.mkdirSync(folderPath);
+                }
             }
         }
-        return MOCK_PATH + suffix;
+        return path;
     }
 
     return suffix;
 }
 
 module.exports = function(config) {
+    PATH_GPIO = config.pathGpio || PATH_GPIO;
+    PATH_CPUINFO = config.pathCPUInfo || PATH_CPUINFO;
+    PATH_W1_DEVICES = config.pathW1Devices || PATH_W1_DEVICES;
+
     MOCK_PATH = config.mockPath;
     MOCK_CREATE_MISSING_FOLDER = config.mockCreateMissingFolders;
     return new Gpio;
