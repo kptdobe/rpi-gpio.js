@@ -414,10 +414,12 @@ function getPath(suffix) {
 }
 
 module.exports = function(config) {
-    PATH_GPIO = config.pathGpio || PATH_GPIO;
-    PATH_CPUINFO = config.pathCPUInfo || PATH_CPUINFO;
+    if( config ) {
+        PATH_GPIO = config.pathGpio || PATH_GPIO;
+        PATH_CPUINFO = config.pathCPUInfo || PATH_CPUINFO;
 
-    MOCK_PATH = config.mockPath;
-    MOCK_CREATE_MISSING_FOLDER = config.mockCreateMissingFolders;
+        MOCK_PATH = config.mockPath;
+        MOCK_CREATE_MISSING_FOLDER = config.mockCreateMissingFolders;
+    }
     return new Gpio;
 };
