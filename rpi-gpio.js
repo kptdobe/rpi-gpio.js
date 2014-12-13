@@ -136,6 +136,16 @@ function Gpio() {
         }
     };
 
+    this.setConfig = function(config) {
+        if (config) {
+            PATH_GPIO = config.pathGpio || PATH_GPIO;
+            PATH_CPUINFO = config.pathCPUInfo || PATH_CPUINFO;
+
+            MOCK_PATH = config.mockPath;
+            MOCK_CREATE_MISSING_FOLDER = config.mockCreateMissingFolders;
+        }
+    }
+
     /**
      * Setup a channel for use as an input or output
      *
@@ -413,13 +423,4 @@ function getPath(suffix) {
     return suffix;
 }
 
-module.exports = function(config) {
-    if( config ) {
-        PATH_GPIO = config.pathGpio || PATH_GPIO;
-        PATH_CPUINFO = config.pathCPUInfo || PATH_CPUINFO;
-
-        MOCK_PATH = config.mockPath;
-        MOCK_CREATE_MISSING_FOLDER = config.mockCreateMissingFolders;
-    }
-    return new Gpio;
-};
+module.exports = new Gpio;
