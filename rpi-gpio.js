@@ -6,7 +6,6 @@ var debug        = require('debug')('rpi-gpio');
 
 var PATH_GPIO = '/sys/class/gpio';
 var PATH_CPUINFO = '/proc/cpuinfo';
-var PATH_W1_DEVICES = '/sys/bus/w1/devices';
 
 var MOCK_PATH;
 var MOCK_CREATE_MISSING_FOLDER = false;
@@ -397,7 +396,7 @@ function isExported(pin, cb) {
 
 function getPath(suffix) {
     if (MOCK_PATH) {
-        var path = MOCK_PATH + suffix;;
+        var path = MOCK_PATH + suffix;
         if (MOCK_CREATE_MISSING_FOLDER) {
             var folderPath = "";
             var folders = path.substring(0, path.lastIndexOf("/")).split("/");
@@ -417,7 +416,6 @@ function getPath(suffix) {
 module.exports = function(config) {
     PATH_GPIO = config.pathGpio || PATH_GPIO;
     PATH_CPUINFO = config.pathCPUInfo || PATH_CPUINFO;
-    PATH_W1_DEVICES = config.pathW1Devices || PATH_W1_DEVICES;
 
     MOCK_PATH = config.mockPath;
     MOCK_CREATE_MISSING_FOLDER = config.mockCreateMissingFolders;

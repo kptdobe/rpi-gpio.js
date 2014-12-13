@@ -8,7 +8,6 @@ Control Raspberry Pi GPIO pins with node.js
 
 ## Extensions to orignal framework
 * Added mocks capability: use [gpio-mocker](https://github.com/kptdobe/gpio-mocker) to develop on a non Raspberry system and to simulate pins i/o
-* WIP: Working on W1 support (especially DS18B20 for my personal needs)
 
 ## Setup
 See this guide on how to get [node.js running on Raspberry Pi](http://joshondesign.com/2013/10/23/noderpi).
